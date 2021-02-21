@@ -22,8 +22,8 @@ The goals / steps of this project are the following:
 [image3]: ./output_images/combined_test5.jpg "Binary Example"
 [image4]: ./output_images/warped_straight_lines2.jpg "Warp Example"
 [image5]: ./output_images/detected_test5.jpg "Fit Visual"
-[image6]: ./examples/example_output.jpg "Output"
-[video1]: ./project_video.mp4 "Video"
+[image6]: ./output_images/final_test5.jpg "Output"
+[video1]: ./project_video_output.mp4 "Video"
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/571/view) Points
 
@@ -112,7 +112,7 @@ The lane line position with respect to the vehicle center is computed by subtrac
 
 #### 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
 
-I implemented this step in lines # through # in my code in `yet_another_file.py` in the function `map_lane()`.  Here is an example of my result on a test image:
+The area between the fitted polynomials are drawn and inverse perspective transformed into the original image to illustrate the identified lane area. This step is implemented in lines #92 through #110 in my code in `Test Image Pipeline` section. Here is an example of my result on a test image:
 
 ![alt text][image6]
 
@@ -122,12 +122,21 @@ I implemented this step in lines # through # in my code in `yet_another_file.py`
 
 #### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
 
-Here's a [link to my video result](./project_video.mp4)
+The pipeline described in the previous sections form the basis of the pipeline used to process the project video. The pipeline for video analysis can be found in function `process_image` in `Video Pipeline` section. This function is called by `Test on Video` section. The following are the changes of video pipeline over image pipeline.
+* To improve efficiency, lane line pixels are identified through the fitted polynomials (`search_around_poly` function at lines #222 through #289 in `Lane Finding` section)
+* Sliding window search is called when no polynomial has been fitted or when `fit_poly` function fails to fit polynomial for 25 frames consecutively (`search_lane` function at lines #291 through #308 in `Lane Finding` section)
+* To reject noises in lane line pixel detection, fitted polynomials are averaged over the past 50 frames (lines #68 through #109 in `Lane Finding` section)
+
+Here's a [link to my video result](./project_video_output.mp4)
 
 ---
 
 ### Discussion
 
 #### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
+
+The following issues came up during development of the pipeline:
+
+1. 
 
 Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
