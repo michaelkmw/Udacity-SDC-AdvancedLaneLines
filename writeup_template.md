@@ -137,6 +137,25 @@ Here's a [link to my video result](./project_video_output.mp4)
 
 The following issues came up during development of the pipeline:
 
-1. 
+1. Camera calibration can't process 9x6 chessboard
+`cv2.findChessboardCorners` can't identify 9x6 corners in some calibration images. To circumvent the issue, 9x5 is chosen instead. This can potentially lead to inaccurate calibration as the undetected corners are located near the edge of the image, which is the place with highest amount of distortion.
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+2. Color thresholding using S-channel in HLS color space also highlights shadow in the background
+This issue is noticeable when applying S-channel thresholding on `test5.jpg` in `test_images` folder. The shadow casted by the tree on the left side is picked up in S-channel. It is noticed that R-channel in RGB color space doesn't detect the shadow. Therefore, S-channel and R-channel are used in conjunction for color thresholding. S-channel in HSV color space has also been explored. However, it performs worse than S-channel in HLS color space.
+
+3. Warped image from perspective transform loses resolution when trying to transform lane line in the distance
+This is to be expected as the resolution of the lane line in the distance in the original image is lower. In order to enhance the resolution of the warped image, the y-pixel of the source points in the further end of the lane lines has to be increased.
+
+4. Radius of curvature and vehicle position w.r.t. lane center fluctuates from frame to frame
+Depending on the frame, lane line marking may significantly alter the polynomials fitted over the detected lane line pixels. To increase the stability of the results, radius of curvature and vehicle position are calculated using fitted polynomials that are averaged over 50 frames.
+
+The following are potential issues with the current pipeline:
+
+1. Failure to detect lane line if multiple high contrast line markings exist
+The pipeline has been tested on the challenge video, and it is found that the sliding window method can possibly pick up the wrong lane line. This is probably caused by the histogram trying to locate the bottom of the lane line with `np.argmax` function. If there is a line with higher contrast than the lane line in the vincinity, this function would mistakenly identify that line as the lane line. Potential method to circumvent the issue is to narrow down the search area based on lane line distance from vehicle center and/or radius of curvature from previous frames
+
+2. Failure to detect lane line if another vehicle merges into the lane
+The gradient and color thresholding may mistakenly highlight the other vehicle as lane line pixel, which leads to incorrect curve fitting. Potential method to circumvent the issue is to compute histogram of activated pixels higher intervals (e.g. divide the image into several horizontal region and compute histogram of each region). The histogram of each neighbouring region can be cross-compared to check for consistency in horizontal location of activated pixels. If there is inconsistency with upper region, only the lower region is used for curve fitting
+
+3. Failure to detect lane line if the vehicle is making sharp turn
+As evident in the harder challenge video, the lane line could potentially be outside of the frame if the turn radius is small. This could cause the sanity check and lane detection function to fail to detect lane lines completely. Potential method to circumvent the issue is to analyze the historical trend of the lane line orientation and location with respect to the vehicle center and make the pipeline adaptive to the changing orientation and location of the lane line.
